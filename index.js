@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
@@ -27,6 +27,8 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const menuCollection = client.db("bistoBossDB").collection("menu");
+    const reviewCollection = client.db("bistoBossDB").collection("reviews");
+    const cartCollection = client.db("bistoBossDB").collection("carts");
 
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
@@ -37,6 +39,35 @@ async function run() {
       const categoryName = req.params.category;
       const query = { category: categoryName };
       const result = await menuCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/reviews", async (req, res) => {
+      const result = await reviewCollection.find().toArray();
+      res.send(result);
+    });
+
+    // Save a cart to DB:
+
+    app.get("/carts", async (req, res) => {
+      const email = req.query?.email;
+      const query = { user_email: email };
+      const result = await cartCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/carts", async (req, res) => {
+      const cartItem = req.body?.newItem;
+      const result = await cartCollection.insertOne(cartItem);
+      res.send(result);
+    });
+
+    // delete a item from carts:
+    app.delete("/carts/:id", async (req, res) => {
+      const id = req.params?.id;
+
+      const query = { _id: new ObjectId(id) };
+      const result = await cartCollection.deleteOne(query);
       res.send(result);
     });
 
