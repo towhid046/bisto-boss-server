@@ -30,11 +30,13 @@ async function run() {
     const reviewCollection = client.db("bistoBossDB").collection("reviews");
     const cartCollection = client.db("bistoBossDB").collection("carts");
 
+    // Get all menu Data:
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
       res.send(result);
     });
 
+    // Get all data that matched a specific category:
     app.get("/menu/:category", async (req, res) => {
       const categoryName = req.params.category;
       const query = { category: categoryName };
@@ -42,13 +44,21 @@ async function run() {
       res.send(result);
     });
 
+    // Get all reviews data:
     app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result);
     });
 
-    // Save a cart to DB:
+    // Save reviews to DB:
+    app.post("/reviews", async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review)
+      res.send(result)
+    });
 
+
+    // Get all cart data by a specific user email:
     app.get("/carts", async (req, res) => {
       const email = req.query?.email;
       const query = { user_email: email };
@@ -56,6 +66,7 @@ async function run() {
       res.send(result);
     });
 
+    // Save all carts
     app.post("/carts", async (req, res) => {
       const cartItem = req.body?.newItem;
       const result = await cartCollection.insertOne(cartItem);
@@ -65,7 +76,6 @@ async function run() {
     // delete a item from carts:
     app.delete("/carts/:id", async (req, res) => {
       const id = req.params?.id;
-
       const query = { _id: new ObjectId(id) };
       const result = await cartCollection.deleteOne(query);
       res.send(result);
