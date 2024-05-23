@@ -29,6 +29,14 @@ async function run() {
     const menuCollection = client.db("bistoBossDB").collection("menu");
     const reviewCollection = client.db("bistoBossDB").collection("reviews");
     const cartCollection = client.db("bistoBossDB").collection("carts");
+    const userCollection = client.db("bistoBossDB").collection("users");
+
+    // create user related apis:
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
 
     // Get all menu Data:
     app.get("/menu", async (req, res) => {
@@ -53,10 +61,9 @@ async function run() {
     // Save reviews to DB:
     app.post("/reviews", async (req, res) => {
       const review = req.body;
-      const result = await reviewCollection.insertOne(review)
-      res.send(result)
+      const result = await reviewCollection.insertOne(review);
+      res.send(result);
     });
-
 
     // Get all cart data by a specific user email:
     app.get("/carts", async (req, res) => {
