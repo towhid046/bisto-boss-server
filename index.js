@@ -32,9 +32,22 @@ async function run() {
     const userCollection = client.db("bistoBossDB").collection("users");
 
     // create user related apis:
+    // save user to bd:
     app.post("/users", async (req, res) => {
       const user = req.body;
+      const query = { email: user?.email };
+      const isExistUser = await userCollection.findOne(query);
+      if (isExistUser) {
+        return res.send({ message: "User Already Exist", insertedId: null });
+      }
       const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // get all users:
+    app.get("/users", async (req, res) => {
+      // const user = req.body;
+      const result = await userCollection.find().toArray();
       res.send(result);
     });
 
