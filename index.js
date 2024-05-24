@@ -2,6 +2,7 @@ const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -31,7 +32,54 @@ async function run() {
     const cartCollection = client.db("bistoBossDB").collection("carts");
     const userCollection = client.db("bistoBossDB").collection("users");
 
-    // create user related apis:
+    // jwt related apis:
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.SECRET_KEY, {
+        expiresIn: "2h",
+      });
+      res.send({ token });
+    });
+
+    const verifyToken = (req, res, next) => {
+      if (!req.headers?.authorization) {
+        return res.status(401).send({ message: "forbidden access" });
+      }
+      const token = req.headers?.authorization.split(" ")[1];
+      if (!token) {
+        return res.status(401).send({ message: "forbidden access" });
+      }
+      jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+        if (err) {
+          return res.status(403).send({ message: "Un authorization" });
+        }
+        req.user = decoded;
+        next();
+      });
+    };
+    // users related apis:
+
+    // get all users:
+    app.get("/users", verifyToken, async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
+      const email = req.params?.email;
+
+      if (email !== req.user?.email) {
+        return res.status(403).send({ message: "unauthorize access" });
+      }
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === "admin";
+      }
+      res.send({ admin });
+    });
+
     // save user to bd:
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -41,12 +89,6 @@ async function run() {
         return res.send({ message: "User Already Exist", insertedId: null });
       }
       const result = await userCollection.insertOne(user);
-      res.send(result);
-    });
-
-    // get all users:
-    app.get("/users", async (req, res) => {
-      const result = await userCollection.find().toArray();
       res.send(result);
     });
 
