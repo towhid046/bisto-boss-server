@@ -46,8 +46,28 @@ async function run() {
 
     // get all users:
     app.get("/users", async (req, res) => {
-      // const user = req.body;
       const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    // delete a specific user:
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // make admin Using Patch:
+    app.patch("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
 
