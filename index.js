@@ -76,20 +76,25 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users/admin/:email", verifyToken, verifyAdmin, async (req, res) => {
-      const email = req.params?.email;
+    app.get(
+      "/users/admin/:email",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const email = req.params?.email;
 
-      if (email !== req.user?.email) {
-        return res.status(403).send({ message: "unauthorize access" });
+        if (email !== req.user?.email) {
+          return res.status(403).send({ message: "unauthorize access" });
+        }
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        let admin = false;
+        if (user) {
+          admin = user?.role === "admin";
+        }
+        res.send({ admin });
       }
-      const query = { email: email };
-      const user = await userCollection.findOne(query);
-      let admin = false;
-      if (user) {
-        admin = user?.role === "admin";
-      }
-      res.send({ admin });
-    });
+    );
 
     // save user to bd:
     app.post("/users", async (req, res) => {
@@ -127,6 +132,13 @@ async function run() {
     // Get all menu Data:
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
+      res.send(result);
+    });
+
+    // save a new menu Item:
+    app.post("/add-menu", async (req, res) => {
+      const item = req.body;
+      const result = await menuCollection.insertOne(item);
       res.send(result);
     });
 
