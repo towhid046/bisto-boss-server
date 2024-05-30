@@ -135,6 +135,13 @@ async function run() {
       res.send(result);
     });
 
+    // get a single menu item by id:
+    app.get("/menu/:id", async (req, res) => {
+      const id = req.params?.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await menuCollection.findOne(query);
+      res.send(result);
+    });
 
     // save a new menu Item:
     app.post("/add-menu", async (req, res) => {
@@ -144,16 +151,28 @@ async function run() {
     });
 
     // delete a single menu Item:
-    app.delete("/menu/:id", async (req, res) => {
+    app.delete("/menu/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
-      const query = {_id : new ObjectId(id) };
+      const query = { _id: new ObjectId(id) };
       const result = await menuCollection.deleteOne(query);
       res.send(result);
     });
 
+    // update a menu item:
+    app.patch("/menu", async (req, res) => {
+      const id = req.query?.id;
+      const item = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: { ...item },
+      };
+      const result = await menuCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     // Get all data that matched a specific category:
-    app.get("/menu/:category", async (req, res) => {
-      const categoryName = req.params.category;
+    app.get("/menu-category", async (req, res) => {
+      const categoryName = req.query?.category;
       const query = { category: categoryName };
       const result = await menuCollection.find(query).toArray();
       res.send(result);
